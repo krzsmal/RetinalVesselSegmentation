@@ -1,0 +1,123 @@
+# Configuration file for Retinal Vessel Segmentation
+
+# Data paths
+data:
+  image_dir: "data/images"              # Directory containing input images
+  train_dir: "data/train_images"        # Directory containing training images
+  mask_dir: "data/masks"                # Directory containing mask images
+  ground_truth_dir: "data/ground_truth" # Directory containing ground truth images
+  model_dir: "models"                   # Directory to save trained models
+
+
+# Post-processing parameters for XGBoost and U-Net
+postprocessing:
+  min_object_size: 120       # Minimum object size to keep (in pixels)
+  closing_kernel_size: 5     # Kernel size for morphological closing
+  opening_kernel_size: 3     # Kernel size for morphological opening
+
+
+# Traditional method (Frangi filter) parameters
+traditional:
+  denoise_kernel: 7               # Kernel size for denoising
+  use_clahe: false                # Whether to apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+  clahe_clip_limit: 2.0           # CLAHE clip limit
+  clahe_tile_grid_size: 8         # CLAHE tile grid size
+  frangi_scales: [1, 2, 3, 4, 5]  # Scales for Frangi filter
+  frangi_alpha: 0.5               # Alpha parameter for Frangi filter
+  frangi_beta: 0.5                # Beta parameter for Frangi filter
+  frangi_gamma: 15                # Gamma parameter for Frangi filter
+  frangi_black_ridges: true       # Whether to detect black ridges (vessels) on bright background
+  min_object_size: 250            # Minimum object size to keep (in pixels)
+  min_object_size: 120            # Minimum object size to keep (in pixels)
+  closing_kernel_size: 8          # Kernel size for morphological closing
+  opening_kernel_size: 3          # Kernel size for morphological opening
+  use_green_channel: true         # Whether to use green channel for processing
+
+
+# XGBoost classifier parameters
+classifier:
+  name: "xgboost_model"           # Model name – used when saving the .pkl file
+  resize_factor: 2                # Factor to downscale images for processing
+  denoise_kernel: 0               # Kernel size for denoising (must be odd, -1 = no denoising)
+  test_size: 0.125                # Fraction of data reserved for final testing
+  val_size: 0.125                 # Fraction of data reserved for validation (early stopping)
+  random_state: 42                # Random seed
+  max_images: null                # Maximum number of images to use for training (null = all)
+  neg_sample_rate: 0.20           # Fraction of negative samples to use (to balance dataset)
+  pos_sample_rate: 1.0            # Fraction of positive samples to use (to balance dataset)
+  max_samples_per_image: 1500000  # Maximum samples to extract from each image (null = all)
+  threshold: 0.99                 # Classification threshold for converting probabilities to binary mask
+  
+  # Feature extraction parameters
+  features:
+    use_cache: true                # Whether to cache extracted features to disk
+    cache_dir: ".cache/features"   # Directory to store cached features
+    window_size: 5                 # Size of the local neighborhood (in pixels) used when computing feature statistics
+    frangi_sigmas: [1.0, 2.0, 3.0] # Scales for Frangi filter
+    sato_sigmas:   [1.0, 2.0, 3.0] # Scales for Sato filter
+    st_sigma_grad: 1.0             # Gaussian smoothing sigma for gradient
+    st_sigma_smooth: 2.0           # Gaussian smoothing sigma for smoothing
+    log_sigma: 1.2                 # Gaussian smoothing sigma for log
+    canny_low:  0.05               # Lower threshold for Canny edge detection
+    canny_high: 0.15               # Upper threshold for Canny edge detection
+    hessian_sigma: 1.0             # Gaussian smoothing sigma for Hessian
+    blackhat_rs: [3, 5, 7]         # Structuring element radii for Black Top-Hat
+    median_k: 5                    # Kernel size for Median filter
+    gabor_thetas:  [0.0, 0.785398163, 1.570796327, 2.35619449] # Orientations for Gabor filter (0, 45, 90, 135 degrees in radians)
+    gabor_lambdas: [4.0, 8.0]      # Wavelengths for Gabor filter
+    gabor_gamma:   0.5             # Spatial aspect ratio for Gabor filter
+    gabor_psi:     0.0             # Phase offset for Gabor filter
+
+  # XGBoost hyperparameters
+  xgb_params:
+    n_estimators: 2000            # Number of boosting rounds (trees)
+    max_depth: 7                  # Maximum tree depth
+    learning_rate: 0.1            # Learning rate (shrinkage)
+    subsample: 0.8                # Fraction of training samples used for each tree
+    colsample_bytree: 0.8         # Fraction of features used for each tree
+    min_child_weight: 1           # Minimum sum of instance weights in a leaf
+    reg_alpha: 0                  # L1 regularization term on weights
+    reg_lambda: 1                 # L2 regularization term on weights
+    objective: 'binary:logistic'  # Objective function – binary classification with probability output (sigmoid)
+    eval_metric: 'aucpr'          # Evaluation metric – Area Under Precision-Recall Curve
+    n_jobs: -1                    # Number of CPU threads to use
+    tree_method: 'hist'           # Tree construction algorithm
+    device: 'cuda'                # Use GPU for training
+    early_stopping_rounds: 100    # Early stopping rounds for XGBoost training
+
+  # Hyperparameter tuning options
+  hyperparameter_tuning:
+    n_trials: 100              # Number of hyperparameter sets to try
+    val_size: 0.25             # Validation fraction (by images)
+    random_state: 42           # Random seed
+    train_best: true           # Whether to retrain the best model on TRAIN+VAL after tuning
+
+
+# U-Net parameters
+unet:
+  name: "unet_model"            # Model name – used when saving the .pt file
+  input_size: 1024              # Input size (height/width) for the model
+  random_state: 42              # Random seed
+  max_images: null              # Maximum number of images to use for training (null = all)
+  test_size: 0.125              # Fraction of data reserved for final testing
+  val_size: 0.125               # Fraction of data reserved for validation (early stopping)
+  use_green_channel: true       # Use only green channel (G->G,G,G) for better vessel contrast
+  denoise_kernel: 0             # Kernel size for denoising (0 = no denoising)
+  threshold: 0.7                # Classification threshold for converting probabilities to binary mask
+  
+  # Architecture parameters
+  architecture:
+    encoder_filters: [32, 64, 128, 256, 512]  # Number of filters in each encoder layer (contracting path)
+    decoder_filters: [256, 128, 64, 32]       # Number of filters in each decoder layer (expanding path)
+    dropout_rate: 0.5                         # Dropout rate for regularization
+    activation: 'relu'                        # Activation function (relu, leaky_relu, etc.)
+
+  # Training parameters
+  training:
+    batch_size: 4                     # Number of samples per batch
+    epochs: 200                       # Maximum number of training epochs
+    learning_rate: 0.0001             # Initial learning rate for Adam optimizer
+    early_stopping_patience: 25       # Number of epochs to wait before early stopping
+    reduce_lr_patience: 10            # Number of epochs to wait before reducing learning rate
+    lr_reduction_factor: 0.5          # Factor to reduce learning rate by when plateau is detected
+    min_lr: 1e-7                      # Minimum learning rate

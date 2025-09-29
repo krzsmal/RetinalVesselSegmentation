@@ -1,0 +1,77 @@
+{
+  "classifier": {
+    "name": "xgboost_model",
+    "resize_factor": 2,
+    "denoise_kernel": 0,
+    "test_size": 0.125,
+    "val_size": 0.125,
+    "random_state": 42,
+    "max_images": null,
+    "neg_sample_rate": 0.2,
+    "pos_sample_rate": 1.0,
+    "max_samples_per_image": 1500000,
+    "threshold": 0.99,
+    "features": {
+      "use_cache": true,
+      "cache_dir": ".cache/features",
+      "window_size": 5,
+      "frangi_sigmas": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "sato_sigmas": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "st_sigma_grad": 1.0,
+      "st_sigma_smooth": 2.0,
+      "log_sigma": 1.2,
+      "canny_low": 0.05,
+      "canny_high": 0.15,
+      "hessian_sigma": 1.0,
+      "blackhat_rs": [
+        3,
+        5,
+        7
+      ],
+      "median_k": 5,
+      "gabor_thetas": [
+        0.0,
+        0.785398163,
+        1.570796327,
+        2.35619449
+      ],
+      "gabor_lambdas": [
+        4.0,
+        8.0
+      ],
+      "gabor_gamma": 0.5,
+      "gabor_psi": 0.0
+    },
+    "xgb_params": {
+      "n_estimators": 2000,
+      "max_depth": 6,
+      "learning_rate": 0.1253180900449768,
+      "subsample": 0.7851973681676854,
+      "colsample_bytree": 0.6294676131005031,
+      "min_child_weight": 17,
+      "reg_alpha": 0.006121596724181526,
+      "reg_lambda": 2.5223024121865465,
+      "objective": "binary:logistic",
+      "eval_metric": "aucpr",
+      "n_jobs": -1,
+      "tree_method": "hist",
+      "device": "cuda",
+      "early_stopping_rounds": 100,
+      "gamma": 4.013235446205695
+    },
+    "hyperparameter_tuning": {
+      "n_trials": 100,
+      "val_size": 0.25,
+      "random_state": 42,
+      "train_best": true
+    }
+  }
+}

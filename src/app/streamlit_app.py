@@ -750,23 +750,42 @@ class VesselSegmentationApp:
 
         st.subheader("Intermediate Processing Results")
 
-        cols = st.columns(3)
-
-        # Select which intermediate results to show
+        # Define steps in correct order with numbering
         intermediate_keys = [
-            ('preprocessed', 'Preprocessed (Green Channel)'),
-            ('frangi_filtered', 'Frangi Filter'),
-            ('frangi_binary', 'Binary Frangi'),
-            ('noise_mask', 'Noise Mask'),
-            ('roi_masked', 'ROI Applied')
+            ('preprocessed', '1. After Preprocessing'),
+            ('frangi_filtered', '2. Frangi Filter (Vesselness Map)'),
+            ('frangi_binary', '3. Binary Frangi'),
+            ('roi_masked', '4. ROI Applied'),
+            ('noise_mask', '5. Noise Mask'),
+            ('final_vessels', '6. Final Vessels (After Morphology)')
         ]
 
-        for idx, (key, title) in enumerate(intermediate_keys):
+        # Display in 3 columns
+        cols = st.columns(3)
+
+        display_idx = 0
+        for key, title in intermediate_keys:
             if key in results:
-                col = cols[idx % 3]
+                col = cols[display_idx % 3]
                 with col:
                     st.markdown(f"**{title}**")
-                    st.image(results[key], width='stretch', channels="GRAY")
+
+                    # Special handling for different image types
+                    img = results[key]
+
+                    # For Frangi filtered - ensure proper visualization
+                    if key == 'frangi_filtered':
+                        # Normalize to 0-255 if not already
+                        if img.max() <= 1.0:
+                            img_display = (img * 255).astype(np.uint8)
+                        else:
+                            img_display = img.astype(np.uint8)
+                        st.image(img_display, width='stretch', clamp=True)
+                    # For all other grayscale images
+                    else:
+                        st.image(img, width='stretch', clamp=True)
+
+                display_idx += 1
 
     def show_comparison(self, prediction, ground_truth):
         """Show comparison between prediction and ground truth."""

@@ -235,7 +235,7 @@ class UNetVesselSegmentation(BaseSegmentationModel):
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
             self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                 self.optimizer, mode='min', factor=self.lr_reduction_factor,
-                patience=self.reduce_lr_patience, min_lr=self.min_lr, verbose=True
+                patience=self.reduce_lr_patience, min_lr=self.min_lr
             )
 
             # Mixed precision training
